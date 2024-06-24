@@ -1,0 +1,10 @@
+services:
+  node:
+    image: node:22-alpine
+    stdin_open: true # docker run -i
+    tty: true  # docker run -t
+    ports:
+      - '3000:3000'
+      - '3001:3001'
+    volumes:
+      - ./src:/var/www
