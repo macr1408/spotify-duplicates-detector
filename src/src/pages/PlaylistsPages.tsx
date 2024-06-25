@@ -1,15 +1,22 @@
-import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
 import { apiClient } from '../services/api/ApiClient';
 import { Playlist } from '../types/Playlist';
 import { Playlists } from '../components/Playlists';
+import { PlaylistPopup } from '../components/PlaylistPopup';
+import { useAuth } from '../custom/useAuth';
 
 export type Status = 'idle' | 'loading' | 'ready' | 'error';
 
 export const PlaylistsPages = () => {
-  const { token } = useContext(AuthContext);
+  const { token } = useAuth();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [status, setStatus] = useState<Status>('idle');
+  const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
+
+  const selectPlaylist = (playlist: Playlist): void => {
+    setSelectedPlaylist(playlist);
+    console.log('playlist selected', playlist);
+  };
 
   useEffect(() => {
     setStatus('loading');
@@ -33,7 +40,7 @@ export const PlaylistsPages = () => {
       break;
 
     case 'ready':
-      content = <Playlists playlists={playlists} />;
+      content = <Playlists playlists={playlists} onClick={selectPlaylist} />;
       break;
 
     case 'error':
@@ -52,6 +59,7 @@ export const PlaylistsPages = () => {
     <>
       <h2 className="text-center text-4xl mt-4 mb-8">Available playlists</h2>
       {content}
+      {selectedPlaylist && <PlaylistPopup playlist={selectedPlaylist} />}
     </>
   );
 };

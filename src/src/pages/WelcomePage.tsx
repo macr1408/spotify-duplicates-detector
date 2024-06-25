@@ -1,12 +1,12 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { authApiClient } from '../services/api/authApiClient';
 import { AccessToken } from '../types/AccessToken';
-import { useContext, useEffect } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { useEffect } from 'react';
+import { useAuth } from '../custom/useAuth';
 
 function WelcomePage() {
   const [searchParams] = useSearchParams();
-  const { token, setToken } = useContext(AuthContext);
+  const { token, setToken } = useAuth();
   const navigate = useNavigate();
 
   const spotifyCode = searchParams.get('code');

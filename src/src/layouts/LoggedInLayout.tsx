@@ -1,9 +1,9 @@
-import { ReactNode, useContext, useEffect } from 'react';
-import { AuthContext } from '../context/AuthContext';
+import { ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../custom/useAuth';
 
 export const LoggedInLayout = ({ children }: { children: ReactNode }) => {
-  const { token, removeToken } = useContext(AuthContext);
+  const { token, removeToken } = useAuth();
   const navigate = useNavigate();
 
   const logOut = () => {

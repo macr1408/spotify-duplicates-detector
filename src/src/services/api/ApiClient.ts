@@ -3,17 +3,41 @@ import axios from 'axios';
 import { appConfig } from '../../config/appConfig';
 import { Playlist } from '../../types/Playlist';
 import { authApiClient } from './authApiClient';
+import { Track } from '../../types/Track';
 
-type PlaylistResponseItem = {
+type ArtistResponse = {
+  name: string;
+};
+
+type TrackResponse = {
+  track: {
+    id: string;
+    external_urls: {
+      spotify: string;
+    };
+    name: string;
+    artists: ArtistResponse[];
+  };
+};
+
+type PlaylistWithTracksResponse = {
+  tracks: {
+    next: string | null;
+    total: number;
+    items: TrackResponse[];
+  };
+};
+
+type PlaylistResponse = {
   name: string;
   id: string;
   images: {
     url: string;
   }[];
 };
-type PlaylistResponse = {
+type PlaylistsResponse = {
   next: string | undefined;
-  items: PlaylistResponseItem[];
+  items: PlaylistResponse[];
 };
 
 const client = axios.create({
@@ -42,7 +66,7 @@ export const apiClient = {
     let playlists = [];
     let offset = 0;
 
-    let response = await client.get<PlaylistResponse>('/v1/me/playlists', {
+    let response = await client.get<PlaylistsResponse>('/v1/me/playlists', {
       headers: {
         Authorization: 'Bearer ' + token,
       },
@@ -70,11 +94,53 @@ export const apiClient = {
     }
     console.log(`${playlists.length} total playlists retrieved`);
 
-    return playlists.map((data: PlaylistResponseItem): Playlist => {
+    return playlists.map((data: PlaylistResponse): Playlist => {
       return {
         id: data.id,
         name: data.name,
         image: data.images[0].url,
+      };
+    });
+  },
+
+  async getPlaylistTracks(token: string, playlistId: string): Promise<Track[]> {
+    let tracks = [];
+    let response = await client.get<PlaylistWithTracksResponse>(`/v1/playlists/${playlistId}`, {
+      headers: {
+        Authorization: 'Bearer ' + token,
+      },
+      params: {
+        fields: 'tracks(next,total,items(track(id,name,external_urls(spotify),artists(name))))',
+      },
+    });
+
+    tracks = response.data.tracks.items;
+    console.log(`${tracks.length} tracks retrieved`);
+
+    // More than 200 tracks = browser crash?
+    while (response.data.tracks.next && tracks.length < 200) {
+      console.log(response.data.tracks);
+      response = await client.get(response.data.tracks.next, {
+        headers: {
+          Authorization: 'Bearer ' + token,
+        },
+      });
+
+      if (!response.data.tracks) {
+        break;
+      }
+
+      console.log(`${response.data.tracks.items.length} extra tracks retrieved`);
+      tracks = tracks.concat(response.data.tracks.items);
+    }
+    console.log(`${tracks.length} total tracks retrieved`);
+
+    return tracks.map((trackResponse: TrackResponse): Track => {
+      return {
+        artist: trackResponse.track.artists.map((artist: ArtistResponse) => artist.name).join(', '),
+        name: trackResponse.track.name,
+        url: trackResponse.track.external_urls.spotify,
+        id: trackResponse.track.id,
       };
     });
   },
