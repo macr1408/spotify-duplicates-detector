@@ -4,8 +4,7 @@ import { Playlist } from '../types/Playlist';
 import { Playlists } from '../components/Playlists';
 import { PlaylistPopup } from '../components/PlaylistPopup';
 import { useAuth } from '../custom/useAuth';
-
-export type Status = 'idle' | 'loading' | 'ready' | 'error';
+import { Status } from '../types/Status';
 
 export const PlaylistsPages = () => {
   const { token } = useAuth();
@@ -16,6 +15,10 @@ export const PlaylistsPages = () => {
   const selectPlaylist = (playlist: Playlist): void => {
     setSelectedPlaylist(playlist);
     console.log('playlist selected', playlist);
+  };
+
+  const onPopupClose = () => {
+    setSelectedPlaylist(null);
   };
 
   useEffect(() => {
@@ -59,7 +62,7 @@ export const PlaylistsPages = () => {
     <>
       <h2 className="text-center text-4xl mt-4 mb-8">Available playlists</h2>
       {content}
-      {selectedPlaylist && <PlaylistPopup playlist={selectedPlaylist} />}
+      {selectedPlaylist && <PlaylistPopup onClose={onPopupClose} playlist={selectedPlaylist} />}
     </>
   );
 };
